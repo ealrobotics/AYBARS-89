@@ -1,3 +1,3 @@
-# AYBARS
+# AYBARS-89
 
-EAL Robotics 2023 Season Charged Up Robot Code
+Code of the EAL Robotics 8828's 2023 robot: AYBARS-89
