@@ -19,6 +19,10 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  public static final class OIConstants {
+    public static final int kDriverControllerPort = 0;
+  }
+
   public static final class CANIDConstants {
     public static final int drivebaseLeftLeadMotorID = 13;
     public static final int drivebaseLeftFollowMotorID = 14;
@@ -30,24 +34,24 @@ public final class Constants {
   }
 
   public static final class DriveConstants {
-    public static final boolean kLeftLeadMotorInverted = false;
-    public static final boolean kLeftFollowMotorInverted = false;
-    public static final boolean kRightLeadMotorInverted = true;
-    public static final boolean kRightFollowMotorInverted = true;
+    public static final boolean kLeftLeadMotorInverted = true;
+    public static final boolean kLeftFollowMotorInverted = true;
+    public static final boolean kRightLeadMotorInverted = false;
+    public static final boolean kRightFollowMotorInverted = false;
 
-    public static final double kLeftP = 1.0;
+    public static final double kLeftP = 4.4853;
     public static final double kLeftI = 0;
     public static final double kLeftD = 0;
 
-    public static final double kRightP = 1.0;
+    public static final double kRightP = 4.4853;
     public static final double kRightI = 0;
     public static final double kRightD = 0;
 
-    public static final double kS = 1.0;
-    public static final double kV = 1.3;
+    public static final double kS = 0.90551;
+    public static final double kV = 3.0474;
 
     public static final int[] kLeftEncoderPorts = new int[] { 9, 8 };
-    public static final boolean kLeftEncoderReversed = false;
+    public static final boolean kLeftEncoderReversed = true;
 
     public static final int[] kRightEncoderPorts = new int[] { 7, 6 };
     public static final boolean kRightEncoderReversed = false;
@@ -55,7 +59,7 @@ public final class Constants {
     public static final int kEncoderCPR = 360;
     public static final double kWheelDiameterMeters = Units.inchesToMeters(6);
     public static final double kEncoderDistancePerPulse = (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
-    public static final double kTrackWidthMeters = 0.381 * 2;
+    public static final double kTrackWidthMeters = 0.6545;
 
     public static final boolean kGyroReversed = false;
 
@@ -64,6 +68,16 @@ public final class Constants {
 
     public static final double kMaxSpeed = 3.0; // meters per second
     public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
+  }
+
+  public static final class AutoConstants {
+    public static final double kMaxVelocity = 3;
+    public static final double kMaxAcceleration = 1;
+
+    // Reasonable baseline values for a RAMSETE follower in units of meters and
+    // seconds
+    public static final double kRamseteB = 2;
+    public static final double kRamseteZeta = 0.7;
   }
 
   public static final class ShooterConstants {
@@ -104,15 +118,5 @@ public final class Constants {
   public static final class StorageConstants {
     public static final int kMotorPort = 7;
     public static final int kBallSensorPort = 6;
-  }
-
-  public static final class AutoConstants {
-    public static final double kTimeoutSeconds = 3;
-    public static final double kDriveDistanceMeters = 2;
-    public static final double kDriveSpeed = 0.5;
-  }
-
-  public static final class OIConstants {
-    public static final int kDriverControllerPort = 0;
   }
 }
