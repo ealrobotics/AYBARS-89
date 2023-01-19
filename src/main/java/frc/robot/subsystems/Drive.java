@@ -13,7 +13,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -99,17 +98,15 @@ public class Drive extends SubsystemBase {
 
     m_drive.setMaxOutput(DriveConstants.kNormalMaxSpeedPercentage);
 
-    m_odometry = new DifferentialDriveOdometry(new Rotation2d(Units.degreesToRadians(m_gyro.getAngle())),
-        m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    m_odometry = new DifferentialDriveOdometry(
+        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
   }
 
   @Override
   public void periodic() {
     // Update odometry
     m_odometry.update(
-        new Rotation2d(
-            Units.degreesToRadians(m_gyro.getAngle())),
-        m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
   }
 
   /**
@@ -122,15 +119,10 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * 
    * Controls the left and right sides of the drive directly with voltages.
-   *
-   * 
    * 
    * @param leftVolts  the commanded left output
-   * 
    * @param rightVolts the commanded right output
-   * 
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
     m_leftLeadMotor.setVoltage(leftVolts);
@@ -139,23 +131,17 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * 
    * Returns the current wheel speeds of the robot.
-   *
-   * 
    * 
    * @return The current wheel speeds.
-   * 
    */
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-
     return new DifferentialDriveWheelSpeeds(m_leftEncoder.getRate(), m_rightEncoder.getRate());
-
   }
 
   /**
    * Sets the desired wheel speeds.
-   *
+   * 
    * @param speeds The desired wheel speeds.
    */
   public void setSpeeds(DifferentialDriveWheelSpeeds speeds) {
@@ -194,11 +180,14 @@ public class Drive extends SubsystemBase {
 
   /**
    * Returns a command that boosts robot speed
+   * 
+   * @param boost make it fast / or not
    */
-  public CommandBase boostCommand() {
+  public CommandBase boostCommand(boolean boost) {
     return runOnce(
         () -> {
-          m_drive.setMaxOutput(DriveConstants.kBoostedMaxSpeedPercentage);
+          m_drive.setMaxOutput(
+              boost ? DriveConstants.kBoostedMaxSpeedPercentage : DriveConstants.kNormalMaxSpeedPercentage);
         })
         .withName("Boost");
   }
@@ -235,9 +224,7 @@ public class Drive extends SubsystemBase {
   public CommandBase resetOdometryCommand(Pose2d pose) {
     return runOnce(() -> {
       m_odometry.resetPosition(
-          new Rotation2d(Units
-              .degreesToRadians(m_gyro.getAngle())),
-          m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
+          Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
     })
         .withName("resetOdometry");
   }
