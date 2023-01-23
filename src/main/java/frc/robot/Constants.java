@@ -39,24 +39,27 @@ public final class Constants {
     public static final boolean kRightLeadMotorInverted = false;
     public static final boolean kRightFollowMotorInverted = false;
 
-    public static final double kLeftP = 4.4853;
+    public static final double kLeftP = 4.416;
     public static final double kLeftI = 0;
     public static final double kLeftD = 0;
 
-    public static final double kRightP = 4.4853;
+    public static final double kRightP = 4.416;
     public static final double kRightI = 0;
     public static final double kRightD = 0;
 
-    public static final double kS = 0.90551;
-    public static final double kV = 3.0474;
+    public static final double kS = 0.88922;
+    public static final double kV = 3.0889;
 
-    public static final int[] kLeftEncoderPorts = new int[] { 9, 8 };
+    // public static final int[] kLeftEncoderPorts = new int[] { 9, 8 }; --E4T
+    public static final int[] kLeftEncoderPorts = new int[] { 3, 2 };
     public static final boolean kLeftEncoderReversed = true;
 
-    public static final int[] kRightEncoderPorts = new int[] { 7, 6 };
+    // public static final int[] kRightEncoderPorts = new int[] { 7, 6 }; --E4T
+    public static final int[] kRightEncoderPorts = new int[] { 5, 4 };
     public static final boolean kRightEncoderReversed = false;
 
-    public static final int kEncoderCPR = 360;
+    // public static final int kEncoderCPR = 360; --E4T
+    public static final int kEncoderCPR = 512;
     public static final double kWheelDiameterMeters = Units.inchesToMeters(6);
     public static final double kEncoderDistancePerPulse = (kWheelDiameterMeters * Math.PI) / (double) kEncoderCPR;
     public static final double kTrackWidthMeters = 0.6545;
@@ -73,50 +76,5 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double kMaxVelocity = 3;
     public static final double kMaxAcceleration = 1;
-
-    // Reasonable baseline values for a RAMSETE follower in units of meters and
-    // seconds
-    public static final double kRamseteB = 2;
-    public static final double kRamseteZeta = 0.7;
-  }
-
-  public static final class ShooterConstants {
-    public static final int[] kEncoderPorts = { 4, 5 };
-    public static final boolean kEncoderReversed = false;
-    public static final int kEncoderCPR = 1024;
-    public static final double kEncoderDistancePerPulse =
-        // Distance units will be rotations
-        1.0 / (double) kEncoderCPR;
-
-    public static final int kShooterMotorPort = 4;
-    public static final int kFeederMotorPort = 5;
-
-    public static final double kShooterFreeRPS = 5300;
-    public static final double kShooterTargetRPS = 4000;
-    public static final double kShooterToleranceRPS = 50;
-
-    // These are not real PID gains, and will have to be tuned for your specific
-    // robot.
-    public static final double kP = 1;
-
-    // On a real robot the feedforward constants should be empirically determined;
-    // these are
-    // reasonable guesses.
-    public static final double kSVolts = 0.05;
-    public static final double kVVoltSecondsPerRotation =
-        // Should have value 12V at free speed...
-        12.0 / kShooterFreeRPS;
-
-    public static final double kFeederSpeed = 0.5;
-  }
-
-  public static final class IntakeConstants {
-    public static final int kMotorPort = 6;
-    public static final int[] kSolenoidPorts = { 0, 1 };
-  }
-
-  public static final class StorageConstants {
-    public static final int kMotorPort = 7;
-    public static final int kBallSensorPort = 6;
   }
 }

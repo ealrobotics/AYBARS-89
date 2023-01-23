@@ -19,13 +19,14 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.RamseteCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.function.DoubleSupplier;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.commands.PPRamseteCommand;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class Drive extends SubsystemBase {
@@ -92,6 +93,16 @@ public class Drive extends SubsystemBase {
     m_rightLeadMotor.setInverted(DriveConstants.kRightLeadMotorInverted);
     m_rightFollowMotor.setInverted(DriveConstants.kRightFollowMotorInverted);
 
+    m_leftLeadMotor.setSmartCurrentLimit(30);
+    m_leftFollowMotor.setSmartCurrentLimit(30);
+    m_rightLeadMotor.setSmartCurrentLimit(30);
+    m_rightFollowMotor.setSmartCurrentLimit(30);
+
+    m_leftLeadMotor.setIdleMode(IdleMode.kBrake);
+    m_leftFollowMotor.setIdleMode(IdleMode.kBrake);
+    m_rightLeadMotor.setIdleMode(IdleMode.kBrake);
+    m_rightFollowMotor.setIdleMode(IdleMode.kBrake);
+
     // Make the motors on the same side follow each other
     m_leftFollowMotor.follow(m_leftLeadMotor);
     m_rightFollowMotor.follow(m_rightLeadMotor);
@@ -107,6 +118,15 @@ public class Drive extends SubsystemBase {
     // Update odometry
     m_odometry.update(
         Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+  }
+
+  /**
+   * Gets the average distance of the two encoders.
+   *
+   * @return the average of the two encoder readings
+   */
+  public double getAverageEncoderDistance() {
+    return (m_leftEncoder.getDistance() + m_rightEncoder.getDistance()) / 2.0;
   }
 
   /**
@@ -229,8 +249,13 @@ public class Drive extends SubsystemBase {
         .withName("resetOdometry");
   }
 
-  public RamseteCommand ramseteCommand(PathPlannerTrajectory trajectory) {
-    return new RamseteCommand(
+  /**
+   * 
+   * @param trajectory a PathPlanner Trajectory to follow
+   * @return a PPRamseteCommand that follows the given PathPlanner Trajectory
+   */
+  public CommandBase followTrajectoryCommand(PathPlannerTrajectory trajectory) {
+    return new PPRamseteCommand(
         trajectory,
         this::getPose,
         m_ramseteController,
@@ -240,6 +265,8 @@ public class Drive extends SubsystemBase {
         m_leftPIDController,
         m_rightPIDController,
         this::tankDriveVolts,
-        this);
+        true,
+        this // Requires this drive subsystem
+    );
   }
 }

@@ -11,8 +11,8 @@ import frc.robot.subsystems.Drive;
 import com.pathplanner.lib.PathConstraints;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.server.PathPlannerServer;
 
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -24,8 +24,8 @@ public class AybarsBot {
   private final Drive m_drive = new Drive();
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+  // private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
+  // private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
 
   // An example trajectory to follow during the autonomous period.
   private PathPlannerTrajectory m_trajectory;
@@ -43,16 +43,17 @@ public class AybarsBot {
         .onFalse(m_drive.boostCommand(false));
 
     // Control the drive with split-stick arcade controls
-    /*
-     * m_drive.setDefaultCommand(
-     * m_drive.arcadeDriveCommand(
-     * () -> m_driverController.getLeftY(), () -> m_driverController.getRightX()));
-     */
 
     m_drive.setDefaultCommand(
         m_drive.arcadeDriveCommand(
-            () -> -m_speedLimiter.calculate(m_driverController.getLeftY()),
-            () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
+            () -> -m_driverController.getLeftY(), () -> -m_driverController.getRightX()));
+
+    /*
+     * m_drive.setDefaultCommand(
+     * m_drive.arcadeDriveCommand(
+     * () -> -m_speedLimiter.calculate(m_driverController.getLeftY()),
+     * () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
+     */
 
     /*
      * m_drive.setDefaultCommand(
@@ -64,6 +65,8 @@ public class AybarsBot {
   }
 
   public void loadAutoPaths() {
+    PathPlannerServer.startServer(5811); // 5811 = port number. adjust this according to your needs
+
     // Create the trajectory to follow in autonomous. It is best to initialize
     // trajectories here to avoid wasting time in autonomous.
     m_trajectory = PathPlanner.loadPath("straight-1",
@@ -78,9 +81,8 @@ public class AybarsBot {
   }
 
   public CommandBase getAutonomousCommand() {
-    m_drive.resetOdometryCommand(m_trajectory.getInitialPose());
-
-    // Run path following command, then stop at the end.
-    return m_drive.ramseteCommand(m_trajectory).andThen(() -> m_drive.tankDriveVolts(0, 0), m_drive);
+    return m_drive.resetOdometryCommand(m_trajectory.getInitialPose())
+        .andThen(m_drive.followTrajectoryCommand(m_trajectory))
+        .andThen(() -> m_drive.tankDriveVolts(0, 0), m_drive);
   }
 }
