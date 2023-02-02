@@ -13,9 +13,11 @@ import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.server.PathPlannerServer;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -62,6 +64,18 @@ public class AybarsBot {
      * -m_rotLimiter.calculate(m_driverController.getRightX()) *
      * DriveConstants.kMaxAngularSpeed));
      */
+
+    /*
+     * Trigger Coast/Brake modes when DS is Disabled/Enabled
+     * Set to Coast mode 5 seconds after disabling the robot.
+     * Set to Brake mode when enabled.
+     */
+    new Trigger(DriverStation::isEnabled)
+        .onTrue(
+            new WaitCommand(5)
+                .andThen(m_drive.setBrakeMode(false).ignoringDisable(true)))
+        .onFalse(
+            m_drive.setBrakeMode(true));
   }
 
   public void loadAutoPaths() {

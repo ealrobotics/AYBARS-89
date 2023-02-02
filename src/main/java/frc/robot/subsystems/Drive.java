@@ -236,6 +236,21 @@ public class Drive extends SubsystemBase {
   }
 
   /**
+   * Sets idle mode to be either brake mode or coast mode.
+   * 
+   * @param brake If true, sets brake mode, otherwise sets coast mode
+   */
+  public CommandBase setBrakeMode(boolean brake) {
+    IdleMode mode = brake ? IdleMode.kBrake : IdleMode.kCoast;
+    return runOnce(() -> {
+      m_leftLeadMotor.setIdleMode(mode);
+      m_leftFollowMotor.setIdleMode(mode);
+      m_rightLeadMotor.setIdleMode(mode);
+      m_rightFollowMotor.setIdleMode(mode);
+    });
+  }
+
+  /**
    * Returns a command that resets the field-relative position to a specific
    * location.
    *
