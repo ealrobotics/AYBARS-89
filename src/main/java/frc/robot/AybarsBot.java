@@ -88,7 +88,7 @@ public class AybarsBot {
 
     // Create and push Field2d to SmartDashboard.
     m_field = new Field2d();
-    SmartDashboard.putData(m_field);
+    SmartDashboard.putData("auto_path", m_field);
 
     // Push the trajectory to Field2d.
     m_field.getObject("traj").setTrajectory(m_trajectory);
