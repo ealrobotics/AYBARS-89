@@ -207,7 +207,7 @@ public class Drive extends SubsystemBase {
     return runOnce(
         () -> {
           m_drive.setMaxOutput(
-              boost ? DriveConstants.kBoostedMaxSpeedPercentage : DriveConstants.kNormalMaxSpeedPercentage);
+              boost ? DriveConstants.kBoostedMaxSpeedPercentage : DriveConstants.kMaxSpeedPercentage);
         })
         .withName("Boost");
   }

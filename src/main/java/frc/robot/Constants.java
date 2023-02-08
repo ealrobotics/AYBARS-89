@@ -66,7 +66,7 @@ public final class Constants {
 
     public static final boolean kGyroReversed = false;
 
-    public static final double kNormalMaxSpeedPercentage = 0.5;
+    public static final double kMaxSpeedPercentage = 0.5;
     public static final double kBoostedMaxSpeedPercentage = 1.0;
 
     public static final double kMaxSpeed = 3.0; // meters per second
