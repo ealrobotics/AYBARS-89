@@ -145,12 +145,21 @@ public class Drive extends SubsystemBase {
     else
       limelight_botPose = LimelightHelpers.getBotPose2d_wpiRed("");
 
-    if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+    /*
+     * Filter vision pose
+     * - Check tv (Valid Targets) != 0
+     * - Check distance between known robot pose and vision pose < 1
+     */
+    if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) < 1.0
+        && LimelightHelpers.getTV("") != 0.0) {
       double limelight_latency = LimelightHelpers.getLatency_Pipeline("");
       m_poseEstimator.addVisionMeasurement(limelight_botPose, Timer.getFPGATimestamp() - limelight_latency);
     }
   }
 
+  /**
+   * Update SmartDashboard field widget
+   */
   public void updateField() {
     m_field.setRobotPose(getPose());
   }
