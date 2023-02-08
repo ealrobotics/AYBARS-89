@@ -71,10 +71,10 @@ public class AybarsBot {
      * Set to Brake mode when enabled.
      */
     new Trigger(DriverStation::isEnabled)
-        .onTrue(
+        .onFalse(
             new WaitCommand(5)
                 .andThen(m_drive.setBrakeMode(false).ignoringDisable(true)))
-        .onFalse(
+        .onTrue(
             m_drive.setBrakeMode(true));
   }
 
