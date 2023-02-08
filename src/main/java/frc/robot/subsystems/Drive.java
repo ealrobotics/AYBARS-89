@@ -7,15 +7,21 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
+import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -68,9 +74,11 @@ public class Drive extends SubsystemBase {
 
   private final RamseteController m_ramseteController = new RamseteController();
 
-  private final DifferentialDriveOdometry m_odometry;
+  private final DifferentialDrivePoseEstimator m_poseEstimator;
 
   private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
+
+  private final Field2d m_field;
 
   /** Creates a new Drive subsystem. */
   public Drive() {
@@ -107,17 +115,44 @@ public class Drive extends SubsystemBase {
     m_leftFollowMotor.follow(m_leftLeadMotor);
     m_rightFollowMotor.follow(m_rightLeadMotor);
 
-    m_drive.setMaxOutput(DriveConstants.kNormalMaxSpeedPercentage);
+    m_drive.setMaxOutput(DriveConstants.kMaxSpeedPercentage);
 
-    m_odometry = new DifferentialDriveOdometry(
-        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    m_poseEstimator = new DifferentialDrivePoseEstimator(
+        m_kinematics, Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
+        m_rightEncoder.getDistance(), new Pose2d());
+
+    m_field = new Field2d();
+    SmartDashboard.putData("robot_pose", m_field);
   }
 
   @Override
   public void periodic() {
     // Update odometry
-    m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    updateOdometry();
+    updateField();
+  }
+
+  /**
+   * Update odometry
+   */
+  public void updateOdometry() {
+    m_poseEstimator.update(Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
+        m_rightEncoder.getDistance());
+
+    Pose2d limelight_botPose;
+    if (Constants.alliance == Alliance.Blue)
+      limelight_botPose = LimelightHelpers.getBotPose2d_wpiBlue("");
+    else
+      limelight_botPose = LimelightHelpers.getBotPose2d_wpiRed("");
+
+    if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+      double limelight_latency = LimelightHelpers.getLatency_Pipeline("");
+      m_poseEstimator.addVisionMeasurement(limelight_botPose, Timer.getFPGATimestamp() - limelight_latency);
+    }
+  }
+
+  public void updateField() {
+    m_field.setRobotPose(getPose());
   }
 
   /**
@@ -135,7 +170,7 @@ public class Drive extends SubsystemBase {
    * @return The pose of the robot.
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return m_poseEstimator.getEstimatedPosition();
   }
 
   /**
@@ -258,7 +293,7 @@ public class Drive extends SubsystemBase {
    */
   public CommandBase resetOdometryCommand(Pose2d pose) {
     return runOnce(() -> {
-      m_odometry.resetPosition(
+      m_poseEstimator.resetPosition(
           Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
     })
         .withName("resetOdometry");

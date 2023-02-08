@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -77,4 +78,6 @@ public final class Constants {
     public static final double kMaxVelocity = 3;
     public static final double kMaxAcceleration = 1;
   }
+
+  public static Alliance alliance;
 }
