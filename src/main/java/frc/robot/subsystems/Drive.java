@@ -24,6 +24,7 @@ import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.LimelightHelpers.LimelightResults;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -80,6 +81,8 @@ public class Drive extends SubsystemBase {
 
   private final Field2d m_field;
 
+  private LimelightResults m_limelight;
+
   /** Creates a new Drive subsystem. */
   public Drive() {
     // Sets the distance per pulse for the encoders
@@ -123,6 +126,8 @@ public class Drive extends SubsystemBase {
 
     m_field = new Field2d();
     SmartDashboard.putData("robot_pose", m_field);
+
+    m_limelight = LimelightHelpers.getLatestResults("");
   }
 
   @Override
@@ -139,11 +144,13 @@ public class Drive extends SubsystemBase {
     m_poseEstimator.update(Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
         m_rightEncoder.getDistance());
 
+    m_limelight = LimelightHelpers.getLatestResults("");
+
     Pose2d limelight_botPose;
     if (Constants.alliance == Alliance.Blue)
-      limelight_botPose = LimelightHelpers.getBotPose2d_wpiBlue("");
+      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiBlue();
     else
-      limelight_botPose = LimelightHelpers.getBotPose2d_wpiRed("");
+      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiRed();
 
     /*
      * Filter vision pose
@@ -151,8 +158,10 @@ public class Drive extends SubsystemBase {
      * - Check distance between known robot pose and vision pose < 1
      */
     if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) < 1.0
-        && LimelightHelpers.getTV("")) {
-      double limelight_latency = LimelightHelpers.getLatency_Pipeline("");
+        && m_limelight.targetingResults.valid) {
+      double limelight_latency = m_limelight.targetingResults.latency_pipeline
+          + m_limelight.targetingResults.latency_jsonParse;
+
       m_poseEstimator.addVisionMeasurement(limelight_botPose, Timer.getFPGATimestamp() - limelight_latency);
     }
   }
