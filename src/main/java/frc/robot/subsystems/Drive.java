@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
@@ -29,6 +30,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.commands.PPRamseteCommand;
 import com.revrobotics.CANSparkMax;
@@ -39,15 +42,21 @@ public class Drive extends SubsystemBase {
   // Drivetrain motors
   private final CANSparkMax m_leftLeadMotor = new CANSparkMax(CANIDConstants.drivebaseLeftLeadMotorID,
       MotorType.kBrushed);
-  private final CANSparkMax m_leftFollowMotor = new CANSparkMax(CANIDConstants.drivebaseLeftFollowMotorID,
-      MotorType.kBrushed);
+  private final WPI_VictorSPX m_leftFollowMotor = new WPI_VictorSPX(CANIDConstants.drivebaseLeftFollowMotorID);
+
   private final CANSparkMax m_rightLeadMotor = new CANSparkMax(CANIDConstants.drivebaseRightLeadMotorID,
       MotorType.kBrushed);
-  private final CANSparkMax m_rightFollowMotor = new CANSparkMax(CANIDConstants.drivebaseRightFollowMotorID,
-      MotorType.kBrushed);
+  private final WPI_VictorSPX m_rightFollowMotor = new WPI_VictorSPX(CANIDConstants.drivebaseRightFollowMotorID);
+
+  private final MotorControllerGroup m_leftMotorControllerGroup = new MotorControllerGroup(m_leftFollowMotor,
+      m_leftFollowMotor);
+
+  private final MotorControllerGroup m_rightMotorControllerGroup = new MotorControllerGroup(m_rightFollowMotor,
+      m_rightFollowMotor);
 
   // The robot's drive
-  private final DifferentialDrive m_drive = new DifferentialDrive(m_leftLeadMotor, m_rightLeadMotor);
+  private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotorControllerGroup,
+      m_rightMotorControllerGroup);
 
   // The left-side drive encoder
   private final Encoder m_leftEncoder = new Encoder(
@@ -92,28 +101,23 @@ public class Drive extends SubsystemBase {
 
     // Reset motors
     m_leftLeadMotor.restoreFactoryDefaults();
-    m_leftFollowMotor.restoreFactoryDefaults();
+    m_leftFollowMotor.configFactoryDefault();
     m_rightLeadMotor.restoreFactoryDefaults();
-    m_rightFollowMotor.restoreFactoryDefaults();
+    m_rightFollowMotor.configFactoryDefault();
 
-    m_leftLeadMotor.setInverted(DriveConstants.kLeftLeadMotorInverted);
-    m_leftFollowMotor.setInverted(DriveConstants.kLeftFollowMotorInverted);
-    m_rightLeadMotor.setInverted(DriveConstants.kRightLeadMotorInverted);
-    m_rightFollowMotor.setInverted(DriveConstants.kRightFollowMotorInverted);
+    m_leftMotorControllerGroup.setInverted(DriveConstants.kLeftLeadMotorInverted);
+    m_rightMotorControllerGroup.setInverted(DriveConstants.kRightLeadMotorInverted);
 
+    // TODO: set current limit for VictorSPX controllers too
     m_leftLeadMotor.setSmartCurrentLimit(30);
-    m_leftFollowMotor.setSmartCurrentLimit(30);
+    // m_leftFollowMotor.setSmartCurrentLimit(30);
     m_rightLeadMotor.setSmartCurrentLimit(30);
-    m_rightFollowMotor.setSmartCurrentLimit(30);
+    // m_rightFollowMotor.setSmartCurrentLimit(30);
 
     m_leftLeadMotor.setIdleMode(IdleMode.kBrake);
-    m_leftFollowMotor.setIdleMode(IdleMode.kBrake);
+    m_leftFollowMotor.setNeutralMode(NeutralMode.Brake);
     m_rightLeadMotor.setIdleMode(IdleMode.kBrake);
-    m_rightFollowMotor.setIdleMode(IdleMode.kBrake);
-
-    // Make the motors on the same side follow each other
-    m_leftFollowMotor.follow(m_leftLeadMotor);
-    m_rightFollowMotor.follow(m_rightLeadMotor);
+    m_rightFollowMotor.setNeutralMode(NeutralMode.Brake);
 
     m_drive.setMaxOutput(DriveConstants.kMaxSpeedPercentage);
 
@@ -189,8 +193,8 @@ public class Drive extends SubsystemBase {
    * @param rightVolts the commanded right output
    */
   public void tankDriveVolts(double leftVolts, double rightVolts) {
-    m_leftLeadMotor.setVoltage(leftVolts);
-    m_rightLeadMotor.setVoltage(rightVolts);
+    m_leftMotorControllerGroup.setVoltage(leftVolts);
+    m_rightMotorControllerGroup.setVoltage(rightVolts);
     m_drive.feed();
   }
 
@@ -214,8 +218,8 @@ public class Drive extends SubsystemBase {
 
     final double leftOutput = m_leftPIDController.calculate(m_leftEncoder.getRate(), speeds.leftMetersPerSecond);
     final double rightOutput = m_rightPIDController.calculate(m_rightEncoder.getRate(), speeds.rightMetersPerSecond);
-    m_leftLeadMotor.setVoltage(leftOutput + leftFeedforward);
-    m_rightLeadMotor.setVoltage(rightOutput + rightFeedforward);
+    m_leftMotorControllerGroup.setVoltage(leftOutput + leftFeedforward);
+    m_rightMotorControllerGroup.setVoltage(rightOutput + rightFeedforward);
   }
 
   /**
@@ -285,12 +289,13 @@ public class Drive extends SubsystemBase {
    * @param brake If true, sets brake mode, otherwise sets coast mode
    */
   public CommandBase setBrakeMode(boolean brake) {
-    IdleMode mode = brake ? IdleMode.kBrake : IdleMode.kCoast;
+    IdleMode sparkMode = brake ? IdleMode.kBrake : IdleMode.kCoast;
+    NeutralMode victorMode = brake ? NeutralMode.Brake : NeutralMode.Coast;
     return runOnce(() -> {
-      m_leftLeadMotor.setIdleMode(mode);
-      m_leftFollowMotor.setIdleMode(mode);
-      m_rightLeadMotor.setIdleMode(mode);
-      m_rightFollowMotor.setIdleMode(mode);
+      m_leftLeadMotor.setIdleMode(sparkMode);
+      m_leftFollowMotor.setNeutralMode(victorMode);
+      m_rightLeadMotor.setIdleMode(sparkMode);
+      m_rightFollowMotor.setNeutralMode(victorMode);
     });
   }
 
