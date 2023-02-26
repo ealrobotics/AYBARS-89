@@ -69,14 +69,14 @@ public class Drive extends SubsystemBase {
   private final PIDController m_rightPIDController = new PIDController(DriveConstants.kRightP, DriveConstants.kRightI,
       DriveConstants.kRightD);
 
-  private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(
+  public final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(
       DriveConstants.kTrackWidthMeters);
 
-  private final RamseteController m_ramseteController = new RamseteController();
+  public final RamseteController m_ramseteController = new RamseteController();
 
   private final DifferentialDrivePoseEstimator m_poseEstimator;
 
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
+  public final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
 
   private final Field2d m_field;
 
@@ -180,6 +180,16 @@ public class Drive extends SubsystemBase {
    */
   public Pose2d getPose() {
     return m_poseEstimator.getEstimatedPosition();
+  }
+
+  /**
+   * Resets the field-relative position to a specific location.
+   *
+   * @param pose The position to reset to.
+   */
+  public void resetOdometry(Pose2d pose) {
+    m_poseEstimator.resetPosition(
+        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
   }
 
   /**
