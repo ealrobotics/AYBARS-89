@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.PathConstraints;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -40,6 +42,10 @@ public final class Constants {
     public static final boolean kRightLeadMotorInverted = false;
     public static final boolean kRightFollowMotorInverted = false;
 
+    public static final double kP = 4.416;
+    public static final double kI = 0;
+    public static final double kD = 0;
+
     public static final double kLeftP = 4.416;
     public static final double kLeftI = 0;
     public static final double kLeftD = 0;
@@ -74,9 +80,10 @@ public final class Constants {
     public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
   }
 
-  public static final class AutoConstants {
+  public static final class AutonConstants {
     public static final double kMaxVelocity = 3;
     public static final double kMaxAcceleration = 1;
+    public static final PathConstraints kConstraints = new PathConstraints(3, 2);
   }
 
   public static Alliance alliance;
