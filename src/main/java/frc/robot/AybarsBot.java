@@ -4,11 +4,11 @@
 
 package frc.robot;
 
-import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Drive;
 
-import com.pathplanner.lib.PathConstraints;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.server.PathPlannerServer;
@@ -26,8 +26,8 @@ public class AybarsBot {
   private final Drive m_drive = new Drive();
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  // private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(3);
-  // private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(3);
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
+  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
 
   // An example trajectory to follow during the autonomous period.
   private PathPlannerTrajectory m_trajectory;
@@ -39,17 +39,6 @@ public class AybarsBot {
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
 
   public void configureBindings() {
-    // Boost robot speed when holding the right trigger (R2)
-    new Trigger(m_driverController.rightTrigger(0))
-        .onTrue(m_drive.boostCommand(true))
-        .onFalse(m_drive.boostCommand(false));
-
-    // Control the drive with split-stick arcade controls
-
-    m_drive.setDefaultCommand(
-        m_drive.arcadeDriveCommand(
-            () -> -m_driverController.getLeftY(), () -> -m_driverController.getRightX()));
-
     /*
      * m_drive.setDefaultCommand(
      * m_drive.arcadeDriveCommand(
@@ -57,13 +46,17 @@ public class AybarsBot {
      * () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
      */
 
-    /*
-     * m_drive.setDefaultCommand(
-     * m_drive.driveCommand(-m_speedLimiter.calculate(m_driverController.getLeftY())
-     * * DriveConstants.kMaxSpeed,
-     * -m_rotLimiter.calculate(m_driverController.getRightX()) *
-     * DriveConstants.kMaxAngularSpeed));
-     */
+    m_drive.setDefaultCommand(
+        m_drive.driveWithSpeedsCommand(
+            -m_speedLimiter.calculate(m_driverController.getLeftY())
+                * DriveConstants.kMaxSpeed,
+            -m_rotLimiter.calculate(m_driverController.getRightX()) *
+                DriveConstants.kMaxAngularSpeed));
+
+    // Boost robot speed when holding the right trigger (R2)
+    new Trigger(m_driverController.rightTrigger(0))
+        .onTrue(m_drive.boostCommand(false))
+        .onFalse(m_drive.boostCommand(true));
 
     /*
      * Trigger Coast/Brake modes when DS is Disabled/Enabled

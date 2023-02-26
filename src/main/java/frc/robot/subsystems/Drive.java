@@ -115,7 +115,7 @@ public class Drive extends SubsystemBase {
     m_leftFollowMotor.follow(m_leftLeadMotor);
     m_rightFollowMotor.follow(m_rightLeadMotor);
 
-    m_drive.setMaxOutput(DriveConstants.kMaxSpeedPercentage);
+    m_drive.setMaxOutput(DriveConstants.kBoostedMaxSpeedPercentage);
 
     m_poseEstimator = new DifferentialDrivePoseEstimator(
         m_kinematics, Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
@@ -224,7 +224,7 @@ public class Drive extends SubsystemBase {
    * @param xSpeed Linear velocity in m/s.
    * @param rot    Angular velocity in rad/s.
    */
-  public CommandBase driveCommand(double xSpeed, double rot) {
+  public CommandBase driveWithSpeedsCommand(double xSpeed, double rot) {
     var wheelSpeeds = m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0.0, rot));
     return run(() -> setSpeeds(wheelSpeeds));
   }
@@ -257,29 +257,6 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Returns a command that drives the robot forward a specified distance at a
-   * specified speed.
-   *
-   * @param distanceMeters The distance to drive forward in meters
-   * @param speed          The fraction of max speed at which to drive
-   */
-  public CommandBase driveDistanceCommand(double distanceMeters, double speed) {
-    return runOnce(
-        () -> {
-          // Reset encoders at the start of the command
-          m_leftEncoder.reset();
-          m_rightEncoder.reset();
-        })
-        // Drive forward at specified speed
-        .andThen(run(() -> m_drive.arcadeDrive(speed, 0)))
-        // End command when we've traveled the specified distance
-        .until(
-            () -> Math.max(m_leftEncoder.getDistance(), m_rightEncoder.getDistance()) >= distanceMeters)
-        // Stop the drive when the command ends
-        .finallyDo(interrupted -> m_drive.stopMotor());
-  }
-
-  /**
    * Sets idle mode to be either brake mode or coast mode.
    * 
    * @param brake If true, sets brake mode, otherwise sets coast mode
@@ -291,21 +268,7 @@ public class Drive extends SubsystemBase {
       m_leftFollowMotor.setIdleMode(mode);
       m_rightLeadMotor.setIdleMode(mode);
       m_rightFollowMotor.setIdleMode(mode);
-    });
-  }
-
-  /**
-   * Returns a command that resets the field-relative position to a specific
-   * location.
-   *
-   * @param pose The position to reset to.
-   */
-  public CommandBase resetOdometryCommand(Pose2d pose) {
-    return runOnce(() -> {
-      m_poseEstimator.resetPosition(
-          Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
-    })
-        .withName("resetOdometry");
+    }).withName("SetBrakeMode");
   }
 
   /**
