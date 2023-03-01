@@ -131,7 +131,7 @@ public class Drive extends SubsystemBase {
     m_field = new Field2d();
     SmartDashboard.putData("robot_pose", m_field);
 
-    m_limelight = LimelightHelpers.getLatestResults("");
+    // m_limelight = LimelightHelpers.getLatestResults("");
   }
 
   @Override
@@ -148,26 +148,32 @@ public class Drive extends SubsystemBase {
     m_poseEstimator.update(Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
         m_rightEncoder.getDistance());
 
-    m_limelight = LimelightHelpers.getLatestResults("");
-
-    Pose2d limelight_botPose;
-    if (Constants.alliance == Alliance.Blue)
-      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiBlue();
-    else
-      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiRed();
+    /*
+     * m_limelight = LimelightHelpers.getLatestResults("");
+     * 
+     * Pose2d limelight_botPose;
+     * if (Constants.alliance == Alliance.Blue)
+     * limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiBlue();
+     * else
+     * limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiRed();
+     */
 
     /*
      * Filter vision pose
      * - Check tv (Valid Targets) != 0
      * - Check distance between known robot pose and vision pose < 1
      */
-    if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) < 1.0
-        && m_limelight.targetingResults.valid) {
-      double limelight_latency = m_limelight.targetingResults.latency_pipeline
-          + m_limelight.targetingResults.latency_jsonParse;
-
-      m_poseEstimator.addVisionMeasurement(limelight_botPose, Timer.getFPGATimestamp() - limelight_latency);
-    }
+    /*
+     * if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.
+     * getEstimatedPosition().getTranslation()) < 1.0
+     * && m_limelight.targetingResults.valid) {
+     * double limelight_latency = m_limelight.targetingResults.latency_pipeline
+     * + m_limelight.targetingResults.latency_jsonParse;
+     * 
+     * m_poseEstimator.addVisionMeasurement(limelight_botPose,
+     * Timer.getFPGATimestamp() - limelight_latency);
+     * }
+     */
   }
 
   /**
