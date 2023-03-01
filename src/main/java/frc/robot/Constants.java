@@ -31,9 +31,9 @@ public final class Constants {
     public static final int drivebaseLeftFollowMotorID = 14;
     public static final int drivebaseRightLeadMotorID = 11;
     public static final int drivebaseRightFollowMotorID = 12;
-    public static final int intakeMotorID = 31;
-    public static final int shooterBottomMotorID = 21;
-    public static final int shooterTopMotorID = 22;
+    public static final int elevatorPivotMotorID = 30;
+    public static final int elevatorLeadMotorID = 31;
+    public static final int elevatorFollowMotorID = 32;
   }
 
   public static final class DriveConstants {
@@ -84,6 +84,12 @@ public final class Constants {
     public static final double kMaxVelocity = 3;
     public static final double kMaxAcceleration = 1;
     public static final PathConstraints kConstraints = new PathConstraints(3, 2);
+  }
+
+  public static final class ElevatorConstants {
+    public static final boolean kLeadMotorInverted = false;
+    public static final boolean kFollowMotorInverted = true;
+    public static final boolean kPivotMotorInverted = false;
   }
 
   public static Alliance alliance;

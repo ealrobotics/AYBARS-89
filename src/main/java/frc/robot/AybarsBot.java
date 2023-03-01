@@ -4,14 +4,13 @@
 
 package frc.robot;
 
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.auton.Autos;
 import frc.robot.subsystems.Drive;
-
-import edu.wpi.first.math.filter.SlewRateLimiter;
+import frc.robot.subsystems.Elevator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -19,16 +18,31 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class AybarsBot {
   // The robot's subsystems
   private final Drive m_drive = new Drive();
-  private final Autos m_autos = new Autos(m_drive);
+  // private final Elevator m_elevator = new Elevator();
+  // private final Autos m_autos = new Autos(m_drive);
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
-  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
+  /*
+   * private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
+   * private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
+   */
 
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
 
   public void configureBindings() {
+    /*
+     * m_elevator.setDefaultCommand(
+     * m_elevator.runElevatorOpenLoop(m_driverController.getLeftTriggerAxis()));
+     * 
+     * new
+     * Trigger(m_driverController.a()).toggleOnTrue(m_elevator.runElevatorOpenLoop(0
+     * .1));
+     * new
+     * Trigger(m_driverController.b()).toggleOnTrue(m_elevator.runElevatorOpenLoop(-
+     * 0.1));
+     */
+
     /*
      * m_drive.setDefaultCommand(
      * m_drive.arcadeDriveCommand(
@@ -36,12 +50,14 @@ public class AybarsBot {
      * () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
      */
 
-    m_drive.setDefaultCommand(
-        m_drive.driveWithSpeedsCommand(
-            -m_speedLimiter.calculate(m_driverController.getLeftY())
-                * DriveConstants.kMaxSpeed,
-            -m_rotLimiter.calculate(m_driverController.getRightX()) *
-                DriveConstants.kMaxAngularSpeed));
+    /*
+     * m_drive.setDefaultCommand(
+     * m_drive.driveWithSpeedsCommand(
+     * -m_speedLimiter.calculate(m_driverController.getLeftY())
+     * DriveConstants.kMaxSpeed,
+     * -m_rotLimiter.calculate(m_driverController.getRightX()) *
+     * DriveConstants.kMaxAngularSpeed));
+     */
 
     // Boost robot speed when holding the right trigger (R2)
     new Trigger(m_driverController.rightTrigger(0))
@@ -62,6 +78,7 @@ public class AybarsBot {
   }
 
   public Command getAutonomousCommand() {
-    return m_autos.getSelected();
+    // return m_autos.getSelected();
+    return new InstantCommand();
   }
 }
