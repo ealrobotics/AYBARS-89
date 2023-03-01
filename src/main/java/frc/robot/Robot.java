@@ -27,7 +27,6 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     // Configure default commands and condition bindings on robot startup
     m_robot.configureBindings();
-    m_robot.loadAutoPaths();
   }
 
   @Override

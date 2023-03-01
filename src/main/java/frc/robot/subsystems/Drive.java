@@ -25,6 +25,7 @@ import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.LimelightHelpers.LimelightResults;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -78,16 +79,18 @@ public class Drive extends SubsystemBase {
   private final PIDController m_rightPIDController = new PIDController(DriveConstants.kRightP, DriveConstants.kRightI,
       DriveConstants.kRightD);
 
-  private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(
+  public final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(
       DriveConstants.kTrackWidthMeters);
 
-  private final RamseteController m_ramseteController = new RamseteController();
+  public final RamseteController m_ramseteController = new RamseteController();
 
   private final DifferentialDrivePoseEstimator m_poseEstimator;
 
-  private final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
+  public final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
 
   private final Field2d m_field;
+
+  private LimelightResults m_limelight;
 
   /** Creates a new Drive subsystem. */
   public Drive() {
@@ -119,7 +122,7 @@ public class Drive extends SubsystemBase {
     m_rightLeadMotor.setIdleMode(IdleMode.kBrake);
     m_rightFollowMotor.setNeutralMode(NeutralMode.Brake);
 
-    m_drive.setMaxOutput(DriveConstants.kMaxSpeedPercentage);
+    m_drive.setMaxOutput(DriveConstants.kBoostedMaxSpeedPercentage);
 
     m_poseEstimator = new DifferentialDrivePoseEstimator(
         m_kinematics, Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
@@ -127,6 +130,8 @@ public class Drive extends SubsystemBase {
 
     m_field = new Field2d();
     SmartDashboard.putData("robot_pose", m_field);
+
+    m_limelight = LimelightHelpers.getLatestResults("");
   }
 
   @Override
@@ -143,11 +148,13 @@ public class Drive extends SubsystemBase {
     m_poseEstimator.update(Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
         m_rightEncoder.getDistance());
 
+    m_limelight = LimelightHelpers.getLatestResults("");
+
     Pose2d limelight_botPose;
     if (Constants.alliance == Alliance.Blue)
-      limelight_botPose = LimelightHelpers.getBotPose2d_wpiBlue("");
+      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiBlue();
     else
-      limelight_botPose = LimelightHelpers.getBotPose2d_wpiRed("");
+      limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiRed();
 
     /*
      * Filter vision pose
@@ -155,8 +162,10 @@ public class Drive extends SubsystemBase {
      * - Check distance between known robot pose and vision pose < 1
      */
     if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) < 1.0
-        && LimelightHelpers.getTV("")) {
-      double limelight_latency = LimelightHelpers.getLatency_Pipeline("");
+        && m_limelight.targetingResults.valid) {
+      double limelight_latency = m_limelight.targetingResults.latency_pipeline
+          + m_limelight.targetingResults.latency_jsonParse;
+
       m_poseEstimator.addVisionMeasurement(limelight_botPose, Timer.getFPGATimestamp() - limelight_latency);
     }
   }
@@ -184,6 +193,16 @@ public class Drive extends SubsystemBase {
    */
   public Pose2d getPose() {
     return m_poseEstimator.getEstimatedPosition();
+  }
+
+  /**
+   * Resets the field-relative position to a specific location.
+   *
+   * @param pose The position to reset to.
+   */
+  public void resetOdometry(Pose2d pose) {
+    m_poseEstimator.resetPosition(
+        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
   }
 
   /**
@@ -228,7 +247,7 @@ public class Drive extends SubsystemBase {
    * @param xSpeed Linear velocity in m/s.
    * @param rot    Angular velocity in rad/s.
    */
-  public CommandBase driveCommand(double xSpeed, double rot) {
+  public CommandBase driveWithSpeedsCommand(double xSpeed, double rot) {
     var wheelSpeeds = m_kinematics.toWheelSpeeds(new ChassisSpeeds(xSpeed, 0.0, rot));
     return run(() -> setSpeeds(wheelSpeeds));
   }
@@ -261,29 +280,6 @@ public class Drive extends SubsystemBase {
   }
 
   /**
-   * Returns a command that drives the robot forward a specified distance at a
-   * specified speed.
-   *
-   * @param distanceMeters The distance to drive forward in meters
-   * @param speed          The fraction of max speed at which to drive
-   */
-  public CommandBase driveDistanceCommand(double distanceMeters, double speed) {
-    return runOnce(
-        () -> {
-          // Reset encoders at the start of the command
-          m_leftEncoder.reset();
-          m_rightEncoder.reset();
-        })
-        // Drive forward at specified speed
-        .andThen(run(() -> m_drive.arcadeDrive(speed, 0)))
-        // End command when we've traveled the specified distance
-        .until(
-            () -> Math.max(m_leftEncoder.getDistance(), m_rightEncoder.getDistance()) >= distanceMeters)
-        // Stop the drive when the command ends
-        .finallyDo(interrupted -> m_drive.stopMotor());
-  }
-
-  /**
    * Sets idle mode to be either brake mode or coast mode.
    * 
    * @param brake If true, sets brake mode, otherwise sets coast mode
@@ -297,20 +293,6 @@ public class Drive extends SubsystemBase {
       m_rightLeadMotor.setIdleMode(sparkMode);
       m_rightFollowMotor.setNeutralMode(victorMode);
     });
-  }
-
-  /**
-   * Returns a command that resets the field-relative position to a specific
-   * location.
-   *
-   * @param pose The position to reset to.
-   */
-  public CommandBase resetOdometryCommand(Pose2d pose) {
-    return runOnce(() -> {
-      m_poseEstimator.resetPosition(
-          Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
-    })
-        .withName("resetOdometry");
   }
 
   /**
