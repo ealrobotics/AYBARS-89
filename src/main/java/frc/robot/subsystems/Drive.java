@@ -25,7 +25,6 @@ import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
-import frc.robot.LimelightHelpers.LimelightResults;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -40,7 +39,6 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class Drive extends SubsystemBase {
-  // Drivetrain motors
   private final CANSparkMax m_leftLeadMotor = new CANSparkMax(CANIDConstants.drivebaseLeftLeadMotorID,
       MotorType.kBrushed);
   private final WPI_VictorSPX m_leftFollowMotor = new WPI_VictorSPX(CANIDConstants.drivebaseLeftFollowMotorID);
@@ -49,35 +47,33 @@ public class Drive extends SubsystemBase {
       MotorType.kBrushed);
   private final WPI_VictorSPX m_rightFollowMotor = new WPI_VictorSPX(CANIDConstants.drivebaseRightFollowMotorID);
 
-  private final MotorControllerGroup m_leftMotorControllerGroup = new MotorControllerGroup(m_leftFollowMotor,
+  private final MotorControllerGroup m_leftMotorControllerGroup = new MotorControllerGroup(m_leftLeadMotor,
       m_leftFollowMotor);
 
-  private final MotorControllerGroup m_rightMotorControllerGroup = new MotorControllerGroup(m_rightFollowMotor,
+  private final MotorControllerGroup m_rightMotorControllerGroup = new MotorControllerGroup(m_rightLeadMotor,
       m_rightFollowMotor);
 
-  // The robot's drive
   private final DifferentialDrive m_drive = new DifferentialDrive(m_leftMotorControllerGroup,
       m_rightMotorControllerGroup);
 
-  // The left-side drive encoder
+  public final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
+
+  private final PIDController m_leftPIDController = new PIDController(DriveConstants.kLeftP, DriveConstants.kLeftI,
+      DriveConstants.kLeftD);
+  private final PIDController m_rightPIDController = new PIDController(DriveConstants.kRightP, DriveConstants.kRightI,
+      DriveConstants.kRightD);
+
   private final Encoder m_leftEncoder = new Encoder(
       DriveConstants.kLeftEncoderPorts[0],
       DriveConstants.kLeftEncoderPorts[1],
       DriveConstants.kLeftEncoderReversed);
 
-  // The right-side drive encoder
   private final Encoder m_rightEncoder = new Encoder(
       DriveConstants.kRightEncoderPorts[0],
       DriveConstants.kRightEncoderPorts[1],
       DriveConstants.kRightEncoderReversed);
 
   private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
-
-  // PID Controllers
-  private final PIDController m_leftPIDController = new PIDController(DriveConstants.kLeftP, DriveConstants.kLeftI,
-      DriveConstants.kLeftD);
-  private final PIDController m_rightPIDController = new PIDController(DriveConstants.kRightP, DriveConstants.kRightI,
-      DriveConstants.kRightD);
 
   public final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(
       DriveConstants.kTrackWidthMeters);
@@ -86,11 +82,9 @@ public class Drive extends SubsystemBase {
 
   private final DifferentialDrivePoseEstimator m_poseEstimator;
 
-  public final SimpleMotorFeedforward m_feedforward = new SimpleMotorFeedforward(DriveConstants.kS, DriveConstants.kV);
-
   private final Field2d m_field;
 
-  private LimelightResults m_limelight;
+  private LimelightHelpers.Results m_limelight;
 
   /** Creates a new Drive subsystem. */
   public Drive() {
@@ -122,7 +116,7 @@ public class Drive extends SubsystemBase {
     m_rightLeadMotor.setIdleMode(IdleMode.kBrake);
     m_rightFollowMotor.setNeutralMode(NeutralMode.Brake);
 
-    m_drive.setMaxOutput(DriveConstants.kBoostedMaxSpeedPercentage);
+    m_drive.setMaxOutput(DriveConstants.kMaxSpeedPercentage);
 
     m_poseEstimator = new DifferentialDrivePoseEstimator(
         m_kinematics, Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
@@ -131,7 +125,7 @@ public class Drive extends SubsystemBase {
     m_field = new Field2d();
     SmartDashboard.putData("robot_pose", m_field);
 
-    // m_limelight = LimelightHelpers.getLatestResults("");
+    m_limelight = LimelightHelpers.getLatestResults("").targetingResults;
   }
 
   @Override
@@ -148,32 +142,30 @@ public class Drive extends SubsystemBase {
     m_poseEstimator.update(Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(),
         m_rightEncoder.getDistance());
 
-    /*
-     * m_limelight = LimelightHelpers.getLatestResults("");
-     * 
-     * Pose2d limelight_botPose;
-     * if (Constants.alliance == Alliance.Blue)
-     * limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiBlue();
-     * else
-     * limelight_botPose = m_limelight.targetingResults.getBotPose2d_wpiRed();
-     */
+    m_limelight = LimelightHelpers.getLatestResults("").targetingResults;
 
     /*
      * Filter vision pose
      * - Check tv (Valid Targets) != 0
      * - Check distance between known robot pose and vision pose < 1
      */
-    /*
-     * if (limelight_botPose.getTranslation().getDistance(m_poseEstimator.
-     * getEstimatedPosition().getTranslation()) < 1.0
-     * && m_limelight.targetingResults.valid) {
-     * double limelight_latency = m_limelight.targetingResults.latency_pipeline
-     * + m_limelight.targetingResults.latency_jsonParse;
-     * 
-     * m_poseEstimator.addVisionMeasurement(limelight_botPose,
-     * Timer.getFPGATimestamp() - limelight_latency);
-     * }
-     */
+    if (m_limelight.valid) {
+      if (Constants.alliance == Alliance.Blue) {
+        if (LimelightHelpers.toPose2D(m_limelight.botpose_wpiblue).getTranslation()
+            .getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+          m_poseEstimator.addVisionMeasurement(
+              LimelightHelpers.toPose2D(m_limelight.botpose_wpiblue),
+              Timer.getFPGATimestamp() - (m_limelight.botpose_wpiblue[6] / 1000));
+        }
+      } else if (Constants.alliance == Alliance.Red) {
+        if (LimelightHelpers.toPose2D(m_limelight.botpose_wpired).getTranslation()
+            .getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+          m_poseEstimator.addVisionMeasurement(
+              LimelightHelpers.toPose2D(m_limelight.botpose_wpired),
+              Timer.getFPGATimestamp() - (m_limelight.botpose_wpired[6] / 1000));
+        }
+      }
+    }
   }
 
   /**
