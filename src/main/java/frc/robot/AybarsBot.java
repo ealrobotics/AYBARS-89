@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OIConstants;
+import frc.robot.auton.Autos;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Gripper;
@@ -12,7 +13,6 @@ import frc.robot.subsystems.Infrastructure;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -23,7 +23,7 @@ public class AybarsBot {
   private final Elevator m_elevator = new Elevator();
   private final Gripper m_gripper = new Gripper();
   private final Infrastructure m_infrastructure = new Infrastructure();
-  // private final Autos m_autos = new Autos(m_drive);
+  private final Autos m_autos = new Autos(m_drive);
 
   private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
   private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
@@ -76,7 +76,6 @@ public class AybarsBot {
   }
 
   public Command getAutonomousCommand() {
-    // return m_autos.getSelected();
-    return new InstantCommand();
+    return m_autos.getSelected();
   }
 }
