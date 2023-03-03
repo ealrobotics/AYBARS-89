@@ -105,10 +105,9 @@ public class Drive extends SubsystemBase {
     m_leftMotorControllerGroup.setInverted(DriveConstants.kLeftLeadMotorInverted);
     m_rightMotorControllerGroup.setInverted(DriveConstants.kRightLeadMotorInverted);
 
-    // TODO: set current limit for VictorSPX controllers too
-    m_leftLeadMotor.setSmartCurrentLimit(30);
+    // m_leftLeadMotor.setSmartCurrentLimit(30);
     // m_leftFollowMotor.setSmartCurrentLimit(30);
-    m_rightLeadMotor.setSmartCurrentLimit(30);
+    // m_rightLeadMotor.setSmartCurrentLimit(30);
     // m_rightFollowMotor.setSmartCurrentLimit(30);
 
     m_leftLeadMotor.setIdleMode(IdleMode.kBrake);
