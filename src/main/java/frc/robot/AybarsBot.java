@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class AybarsBot {
   // The robot's subsystems
   private final Drive m_drive = new Drive();
-  // private final Elevator m_elevator = new Elevator();
+  private final Elevator m_elevator = new Elevator();
   // private final Autos m_autos = new Autos(m_drive);
 
   // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
@@ -31,17 +31,13 @@ public class AybarsBot {
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
 
   public void configureBindings() {
-    /*
-     * m_elevator.setDefaultCommand(
-     * m_elevator.runElevatorOpenLoop(m_driverController.getLeftTriggerAxis()));
-     * 
+    // Elevator Controls
+    new Trigger(m_driverController.y()).whileTrue(m_elevator.runElevatorOpenLoop(0.2));
+    new Trigger(m_driverController.a()).whileTrue(m_elevator.runElevatorOpenLoop(-0.2));
+    new Trigger(m_driverController.x()).whileTrue(m_elevator.runElevatorPivotClosedLoop(0));
+    new Trigger(m_driverController.b()).whileTrue(m_elevator.runElevatorPivotClosedLoop(270));
+
      * new
-     * Trigger(m_driverController.a()).toggleOnTrue(m_elevator.runElevatorOpenLoop(0
-     * .1));
-     * new
-     * Trigger(m_driverController.b()).toggleOnTrue(m_elevator.runElevatorOpenLoop(-
-     * 0.1));
-     */
 
     /*
      * m_drive.setDefaultCommand(
