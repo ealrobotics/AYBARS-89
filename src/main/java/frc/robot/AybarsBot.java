@@ -5,9 +5,11 @@
 package frc.robot;
 
 import frc.robot.Constants.OIConstants;
-import frc.robot.auton.Autos;
 import frc.robot.subsystems.Drive;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Gripper;
+import frc.robot.subsystems.Infrastructure;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -19,13 +21,12 @@ public class AybarsBot {
   // The robot's subsystems
   private final Drive m_drive = new Drive();
   private final Elevator m_elevator = new Elevator();
+  private final Gripper m_gripper = new Gripper();
+  private final Infrastructure m_infrastructure = new Infrastructure();
   // private final Autos m_autos = new Autos(m_drive);
 
-  // Slew rate limiters to make joystick inputs more gentle; 1/3 sec from 0 to 1.
-  /*
-   * private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
-   * private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
-   */
+  private final SlewRateLimiter m_speedLimiter = new SlewRateLimiter(4);
+  private final SlewRateLimiter m_rotLimiter = new SlewRateLimiter(4);
 
   // The driver's controller
   CommandXboxController m_driverController = new CommandXboxController(OIConstants.kDriverControllerPort);
@@ -37,14 +38,14 @@ public class AybarsBot {
     new Trigger(m_driverController.x()).whileTrue(m_elevator.runElevatorPivotClosedLoop(0));
     new Trigger(m_driverController.b()).whileTrue(m_elevator.runElevatorPivotClosedLoop(270));
 
-     * new
+    // Gripper Controls
+    new Trigger(m_driverController.rightBumper()).onTrue(m_gripper.toggleGripper());
 
-    /*
-     * m_drive.setDefaultCommand(
-     * m_drive.arcadeDriveCommand(
-     * () -> -m_speedLimiter.calculate(m_driverController.getLeftY()),
-     * () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
-     */
+    // Drivetrain Controls
+    m_drive.setDefaultCommand(
+        m_drive.arcadeDriveCommand(
+            () -> -m_speedLimiter.calculate(m_driverController.getLeftY()),
+            () -> -m_rotLimiter.calculate(m_driverController.getRightX())));
 
     /*
      * m_drive.setDefaultCommand(
@@ -71,6 +72,7 @@ public class AybarsBot {
                 .andThen(m_drive.setBrakeMode(false).ignoringDisable(true)))
         .onTrue(
             m_drive.setBrakeMode(true));
+
   }
 
   public Command getAutonomousCommand() {
