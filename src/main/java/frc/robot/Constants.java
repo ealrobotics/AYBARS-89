@@ -7,6 +7,7 @@ package frc.robot;
 import com.pathplanner.lib.PathConstraints;
 
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 /**
@@ -27,6 +28,7 @@ public final class Constants {
   }
 
   public static final class CANIDConstants {
+    public static final int pcmID = 2;
     public static final int drivebaseLeftLeadMotorID = 13;
     public static final int drivebaseLeftFollowMotorID = 14;
     public static final int drivebaseRightLeadMotorID = 11;
@@ -94,6 +96,12 @@ public final class Constants {
     public static final double kPivotD = 1.0;
     public static final double kPivotMin = -1.0;
     public static final double kPivotMax = 1.0;
+  }
+
+  public static final class GripperConstants {
+    public static final int kGripperForward = 1;
+    public static final int kGripperReverse = 2;
+    public static final Value kGripperDefaultState = Value.kForward;
   }
 
   public static Alliance alliance;
