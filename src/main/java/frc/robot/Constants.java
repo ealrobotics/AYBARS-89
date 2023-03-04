@@ -90,12 +90,11 @@ public final class Constants {
 
   public static final class ElevatorConstants {
     public static final boolean kLeadMotorInverted = false;
-    public static final boolean kFollowMotorInverted = true;
-    public static final boolean kPivotMotorInverted = false;
+    public static final boolean kPivotMotorInverted = true;
     public static final double kPivotP = 1.0;
-    public static final double kPivotD = 1.0;
-    public static final double kPivotMin = -1.0;
-    public static final double kPivotMax = 1.0;
+    public static final double kPivotD = 0.0;
+    public static final double kPivotMin = -0.3;
+    public static final double kPivotMax = 0.3;
   }
 
   public static final class GripperConstants {

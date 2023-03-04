@@ -28,12 +28,11 @@ public class Elevator extends SubsystemBase {
   private final CANSparkMax m_pivotMotor = new CANSparkMax(CANIDConstants.elevatorPivotMotorID,
       MotorType.kBrushless);
 
-  private final SparkMaxPIDController m_pivotPidController;
+  private final SparkMaxPIDController m_pivotPIDController;
   private final RelativeEncoder m_pivotEncoder;
 
   /** Creates a new Drive subsystem. */
   public Elevator() {
-
     // Reset motors
     m_leadMotor.restoreFactoryDefaults();
     m_followMotor.restoreFactoryDefaults();
@@ -43,23 +42,31 @@ public class Elevator extends SubsystemBase {
     m_followMotor.setIdleMode(IdleMode.kBrake);
     m_pivotMotor.setIdleMode(IdleMode.kBrake);
 
-    m_leadMotor.setInverted(ElevatorConstants.kLeadMotorInverted);
-    m_followMotor.setInverted(ElevatorConstants.kFollowMotorInverted);
     m_pivotMotor.setInverted(ElevatorConstants.kPivotMotorInverted);
 
-    m_pivotPidController = m_pivotMotor.getPIDController();
+    m_pivotPIDController = m_pivotMotor.getPIDController();
     m_pivotEncoder = m_pivotMotor.getEncoder();
+    m_pivotEncoder.setPosition(0);
+    m_pivotPIDController.setP(ElevatorConstants.kPivotP);
+    m_pivotPIDController.setI(0);
+    m_pivotPIDController.setD(ElevatorConstants.kPivotD);
+    m_pivotPIDController.setIZone(0);
+    m_pivotPIDController.setFF(0);
+    m_pivotPIDController.setOutputRange(ElevatorConstants.kPivotMin, ElevatorConstants.kPivotMax);
 
-    m_pivotPidController.setP(ElevatorConstants.kPivotP);
-    m_pivotPidController.setI(0);
-    m_pivotPidController.setD(ElevatorConstants.kPivotD);
-    m_pivotPidController.setIZone(0);
-    m_pivotPidController.setFF(0);
-
-    m_pivotPidController.setOutputRange(ElevatorConstants.kPivotMin, ElevatorConstants.kPivotMax);
+    m_elevatorPIDController = m_leadMotor.getPIDController();
+    m_elevatorEncoder = m_leadMotor.getEncoder();
+    m_elevatorEncoder.setPosition(0);
+    m_elevatorPIDController.setP(ElevatorConstants.kP);
+    m_elevatorPIDController.setI(0);
 
     SmartDashboard.putNumber("Set Rotations", 10);
-    // m_followMotor.follow(m_leadMotor);
+
+    m_followMotor.follow(m_leadMotor, true);
+
+    m_leadMotor.burnFlash();
+    m_followMotor.burnFlash();
+    m_pivotMotor.burnFlash();
   }
 
   @Override
@@ -80,7 +87,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public CommandBase runElevatorPivotClosedLoop(double setpoint) {
-    return run(() -> m_pivotPidController.setReference(setpoint, ControlType.kPosition))
+    return run(() -> m_pivotPIDController.setReference(setpoint, ControlType.kPosition))
         .until(() -> m_pivotEncoder.getPosition() == setpoint)
         .finallyDo((end) -> m_pivotMotor.set(0.0));
   }
