@@ -28,7 +28,7 @@ public final class Constants {
   }
 
   public static final class CANIDConstants {
-    public static final int pcmID = 2;
+    public static final int pcmID = 3;
     public static final int drivebaseLeftLeadMotorID = 13;
     public static final int drivebaseLeftFollowMotorID = 14;
     public static final int drivebaseRightLeadMotorID = 11;
@@ -60,11 +60,11 @@ public final class Constants {
     public static final double kV = 3.0889;
 
     // public static final int[] kLeftEncoderPorts = new int[] { 9, 8 }; --E4T
-    public static final int[] kLeftEncoderPorts = new int[] { 3, 2 };
+    public static final int[] kLeftEncoderPorts = new int[] { 0, 1 };
     public static final boolean kLeftEncoderReversed = true;
 
     // public static final int[] kRightEncoderPorts = new int[] { 7, 6 }; --E4T
-    public static final int[] kRightEncoderPorts = new int[] { 5, 4 };
+    public static final int[] kRightEncoderPorts = new int[] { 2, 3 };
     public static final boolean kRightEncoderReversed = false;
 
     // public static final int kEncoderCPR = 360; --E4T
