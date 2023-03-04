@@ -95,6 +95,10 @@ public final class Constants {
     public static final double kPivotD = 0.0;
     public static final double kPivotMin = -0.3;
     public static final double kPivotMax = 0.3;
+    public static final double kP = 1.0;
+    public static final double kD = 0.0;
+    public static final double kMin = -0.3;
+    public static final double kMax = 0.3;
   }
 
   public static final class GripperConstants {

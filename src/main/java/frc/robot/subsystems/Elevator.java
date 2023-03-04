@@ -31,6 +31,9 @@ public class Elevator extends SubsystemBase {
   private final SparkMaxPIDController m_pivotPIDController;
   private final RelativeEncoder m_pivotEncoder;
 
+  private final SparkMaxPIDController m_elevatorPIDController;
+  private final RelativeEncoder m_elevatorEncoder;
+
   /** Creates a new Drive subsystem. */
   public Elevator() {
     // Reset motors
@@ -59,6 +62,10 @@ public class Elevator extends SubsystemBase {
     m_elevatorEncoder.setPosition(0);
     m_elevatorPIDController.setP(ElevatorConstants.kP);
     m_elevatorPIDController.setI(0);
+    m_elevatorPIDController.setD(ElevatorConstants.kD);
+    m_elevatorPIDController.setIZone(0);
+    m_elevatorPIDController.setFF(0);
+    m_elevatorPIDController.setOutputRange(ElevatorConstants.kMin, ElevatorConstants.kMax);
 
     SmartDashboard.putNumber("Set Rotations", 10);
 
@@ -90,5 +97,11 @@ public class Elevator extends SubsystemBase {
     return run(() -> m_pivotPIDController.setReference(setpoint, ControlType.kPosition))
         .until(() -> m_pivotEncoder.getPosition() == setpoint)
         .finallyDo((end) -> m_pivotMotor.set(0.0));
+  }
+
+  public CommandBase runElevatorClosedLoop(double setpoint) {
+    return run(() -> m_elevatorPIDController.setReference(setpoint, ControlType.kPosition))
+        .until(() -> m_elevatorEncoder.getPosition() == setpoint)
+        .finallyDo((end) -> m_leadMotor.set(0.0));
   }
 }
