@@ -7,18 +7,22 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.RamseteController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
-import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants;
+import frc.robot.LimelightHelpers;
 import frc.robot.Constants.CANIDConstants;
 import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -76,9 +80,11 @@ public class Drive extends SubsystemBase {
 
   public final RamseteController m_ramseteController = new RamseteController();
 
-  private final Field2d m_field;
+  private final DifferentialDrivePoseEstimator m_poseEstimator;
 
-  private final DifferentialDriveOdometry m_odometry;
+  private LimelightHelpers.Results m_limelight;
+
+  private final Field2d m_field;
 
   /** Creates a new Drive subsystem. */
   public Drive() {
@@ -108,13 +114,17 @@ public class Drive extends SubsystemBase {
         m_leftMotorControllerGroup,
         m_rightMotorControllerGroup);
 
-    m_odometry = new DifferentialDriveOdometry(
-        Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+    m_poseEstimator = new DifferentialDrivePoseEstimator(
+        m_kinematics, Rotation2d.fromDegrees(m_gyro.getAngle()),
+        m_leftEncoder.getDistance(),
+        m_rightEncoder.getDistance(), new Pose2d());
 
     m_field = new Field2d();
-    m_field.setRobotPose(m_odometry.getPoseMeters());
+    m_field.setRobotPose(m_poseEstimator.getEstimatedPosition());
 
     SmartDashboard.putData("robot_pose", m_field);
+
+    // m_limelight = LimelightHelpers.getLatestResults("").targetingResults;
   }
 
   @Override
@@ -128,8 +138,29 @@ public class Drive extends SubsystemBase {
    * Update odometry
    */
   public void updateOdometry() {
-    m_odometry.update(
+    m_poseEstimator.update(
         Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
+
+    m_limelight = LimelightHelpers.getLatestResults("").targetingResults;
+
+    if (m_limelight.valid) {
+      if (Constants.alliance == Alliance.Blue) {
+        if (LimelightHelpers.toPose2D(m_limelight.botpose_wpiblue).getTranslation()
+            .getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+          m_poseEstimator.addVisionMeasurement(
+              LimelightHelpers.toPose2D(m_limelight.botpose_wpiblue),
+              Timer.getFPGATimestamp() - (m_limelight.botpose_wpiblue[6] / 1000));
+        }
+      } else if (Constants.alliance == Alliance.Red) {
+        if (LimelightHelpers.toPose2D(m_limelight.botpose_wpired).getTranslation()
+            .getDistance(m_poseEstimator.getEstimatedPosition().getTranslation()) > 1.0) {
+          m_poseEstimator.addVisionMeasurement(
+              LimelightHelpers.toPose2D(m_limelight.botpose_wpired),
+              Timer.getFPGATimestamp() - (m_limelight.botpose_wpired[6] / 1000));
+        }
+      }
+    }
+
   }
 
   /**
@@ -154,7 +185,7 @@ public class Drive extends SubsystemBase {
    * @return The pose of the robot.
    */
   public Pose2d getPose() {
-    return m_odometry.getPoseMeters();
+    return m_poseEstimator.getEstimatedPosition();
   }
 
   /**
@@ -163,7 +194,7 @@ public class Drive extends SubsystemBase {
    * @param pose The position to reset to.
    */
   public void resetOdometry(Pose2d pose) {
-    m_odometry.resetPosition(
+    m_poseEstimator.resetPosition(
         Rotation2d.fromDegrees(m_gyro.getAngle()), m_leftEncoder.getDistance(), m_rightEncoder.getDistance(), pose);
   }
 
