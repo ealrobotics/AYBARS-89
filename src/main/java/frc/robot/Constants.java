@@ -34,8 +34,8 @@ public final class Constants {
     public static final int drivebaseRightLeadMotorID = 11;
     public static final int drivebaseRightFollowMotorID = 12;
     public static final int elevatorPivotMotorID = 30;
-    public static final int elevatorLeadMotorID = 31;
-    public static final int elevatorFollowMotorID = 32;
+    public static final int elevatorLeadMotorID = 32;
+    public static final int elevatorFollowMotorID = 31;
   }
 
   public static final class DriveConstants {
@@ -87,22 +87,38 @@ public final class Constants {
   }
 
   public static final class ElevatorConstants {
-    public static final boolean kLeadMotorInverted = false;
-    public static final boolean kPivotMotorInverted = true;
-    public static final double kPivotP = 1.0;
-    public static final double kPivotD = 0.0;
-    public static final double kPivotMin = -0.3;
-    public static final double kPivotMax = 0.3;
-    public static final double kP = 1.0;
-    public static final double kD = 0.0;
+    public static final boolean kInverted = false;
+    public static final double kP = 0.1;
+    public static final double kI = 0;
+    public static final double kD = 0;
     public static final double kMin = -0.3;
     public static final double kMax = 0.3;
+    public static final double kRampRate = 0.5;
+  }
+
+  public static final class PivotConstants {
+    public static final boolean kInverted = true;
+    public static final double kP = 0.6;
+    public static final double kI = 0;
+    public static final double kD = 0.075;
+    public static final double kMin = -1.0;
+    public static final double kMax = 1.0;
+    public static final double kRampRate = 0.5;
   }
 
   public static final class GripperConstants {
     public static final int kGripperForward = 1;
     public static final int kGripperReverse = 2;
     public static final Value kGripperDefaultState = Value.kForward;
+  }
+
+  public static final class Setpoints {
+    public static final double kElevatorHigh = 80;
+    public static final double kPivotHigh = 300;
+    public static final double kElevatorMid = 50;
+    public static final double kPivotMid = 200;
+    public static final double kElevatorLow = 10;
+    public static final double kPivotLow = 50;
   }
 
   public static Alliance alliance;
