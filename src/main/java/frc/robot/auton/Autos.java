@@ -3,12 +3,13 @@ package frc.robot.auton;
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.auto.PIDConstants;
 import com.pathplanner.lib.auto.RamseteAutoBuilder;
+import com.pathplanner.lib.server.PathPlannerServer;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.Constants.AutonConstants;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.subsystems.Drive;
 
@@ -40,9 +41,10 @@ public final class Autos {
 
     m_autonChooser = new SendableChooser<Command>();
     m_autonChooser.setDefaultOption("No-op", new InstantCommand());
-    m_autonChooser.addOption("Score 1", Auto1Piece());
+    m_autonChooser.addOption("Straight 3 Meters", this.FirstAuto());
 
     SmartDashboard.putData("Auton Chooser", m_autonChooser);
+    PathPlannerServer.startServer(5811);
   }
 
   private void setMarkers() {
@@ -53,8 +55,7 @@ public final class Autos {
     return m_autonChooser.getSelected();
   }
 
-  public Command Auto1Piece() {
-    return m_autonBuilder.fullAuto(
-        PathPlanner.loadPathGroup("Auto1Piece", AutonConstants.kConstraints));
+  public Command FirstAuto() {
+    return m_autonBuilder.fullAuto(PathPlanner.loadPath("straight-3m", AutoConstants.kConstraints));
   }
 }

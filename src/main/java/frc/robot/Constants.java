@@ -82,10 +82,8 @@ public final class Constants {
     public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
   }
 
-  public static final class AutonConstants {
-    public static final double kMaxVelocity = 3;
-    public static final double kMaxAcceleration = 1;
-    public static final PathConstraints kConstraints = new PathConstraints(3, 2);
+  public static final class AutoConstants {
+    public static final PathConstraints kConstraints = new PathConstraints(3, 1);
   }
 
   public static final class ElevatorConstants {
