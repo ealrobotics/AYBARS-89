@@ -27,6 +27,7 @@ public class AybarsBot {
   private final Elevator m_elevator = new Elevator();
   private final Pivot m_pivot = new Pivot();
   private final Gripper m_gripper = new Gripper();
+  @SuppressWarnings("unused")
   private final Infrastructure m_infrastructure = new Infrastructure();
   private final Autos m_autos = new Autos(m_drive);
 
