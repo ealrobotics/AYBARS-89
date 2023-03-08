@@ -80,6 +80,9 @@ public final class Constants {
 
     public static final double kMaxSpeed = 3.0; // meters per second
     public static final double kMaxAngularSpeed = 2 * Math.PI; // one rotation per second
+    public static final double kSpeedRateLimit = 6;
+    public static final double kRotRateLimit = 6;
+
   }
 
   public static final class AutoConstants {
