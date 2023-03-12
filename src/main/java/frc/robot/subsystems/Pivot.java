@@ -22,6 +22,7 @@ public class Pivot extends SubsystemBase {
 
   public Pivot() {
     m_motor.restoreFactoryDefaults();
+    m_motor.setSmartCurrentLimit(35);
     m_motor.setIdleMode(IdleMode.kBrake);
     m_motor.setInverted(PivotConstants.kInverted);
 

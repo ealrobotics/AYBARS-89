@@ -34,6 +34,9 @@ public class Elevator extends SubsystemBase {
     m_leadMotor.restoreFactoryDefaults();
     m_followMotor.restoreFactoryDefaults();
 
+    m_leadMotor.setSmartCurrentLimit(35);
+    m_followMotor.setSmartCurrentLimit(35);
+
     m_leadMotor.setIdleMode(IdleMode.kBrake);
     m_followMotor.setIdleMode(IdleMode.kBrake);
 
